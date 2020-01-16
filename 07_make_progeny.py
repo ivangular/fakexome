@@ -74,12 +74,16 @@ def read_parents(vcdir, vcf):
 			# 0/1 or 1/0 is not ratio, it means allele1/allele2 and 0 and 1 and perhaps 2 indicates ref (0) alt1 (1) or alt2 (2)
 			# thus 0/1 or 1/0 means the same
 			alternative = [ref] + alt.split(",")
+			# in a small percentage of cases (but comparable to the number of
+			# variants on Y chromosome) one can find "0/1" or "1/0" phenotype for male on chromosome X
+			# here we take that to be a mistake
 			genotype = [int(i) for i in field[9].split("/")]
+			if parent=="d" and chromosome in ["X","Y"] and len(genotype)>1: continue
 			genotype_sanity(genotype, line, chromosome, ref, alt, verbose=False)
 			if not chromosome in variants: variants[chromosome]={}
 			if not position in variants[chromosome]: variants[chromosome][position] = {"m":[], "d":[]}
 			# in hope of making the algebra of variants easier later,
-			# store as a list of [from,to] pairs where [ref, ref] i.e. no change is one of the possibilities
+			# store as a list of (ref,alt) pairs where (ref, ref) i.e. no change is one of the possibilities
 			variants[chromosome][position][parent].extend([(ref, alternative[a]) for a in genotype])
 		vcf_inf.close()
 	return variants
@@ -99,12 +103,16 @@ def cross_diploid(var, pos, chromosome):
 	else:
 		print("no var position {} in chrom {}?".format(pos, chromosome))
 		exit()
+	# did we end up with two reference alleles?
+	if var["c"][0][1] ==  var["c"][0][0] and var["c"][1][0] == var["c"][1][1]:
+		del var["c"]
 
 
 #############
 # this is where fake exome is fake - it should
 # consistently be one one chromosome (we are doing this for male child)
 # instead we are picking random from both
+
 def select_from_x(var):
 	if len(var["m"])>0:
 		var["c"] = [choice(var["m"])]
@@ -121,13 +129,13 @@ def cross(variants, gender):
 	# autosomal chromosomes
 	for chromosome in [str(i+1) for i in range(22)]:
 		for pos, var in variants[chromosome].items():
-			cross_diploid (var, pos, chromosome)
+			cross_diploid(var, pos, chromosome)
 
 	# special care for sex chromosomes
 	if gender=="female":
 		chromosome='X'
 		for pos, var in variants[chromosome].items():
-			cross_diploid (var, pos, chromosome)
+			cross_diploid(var, pos, chromosome)
 	else:
 		chromosome = 'X'
 		for pos, var in variants[chromosome].items():
@@ -141,8 +149,25 @@ def cross(variants, gender):
 def allele_compact(vts):
 	return "|".join([":".join(vt) for vt in vts])
 
+
+############################
+def fix_wt(var, parent, chromosome, gender):
+
+	if parent in var and len(var[parent])>0: return
+
+	ref = var["c"][0][0]
+	var[parent] = [(ref, ref), (ref, ref)]
+	# special cases:
+	if chromosome == "X" and parent=="d":
+			var[parent] = [(ref,ref)]
+	if gender == "male":
+		if chromosome == "Y" and parent=="m":
+			var[parent] = ['-']
+
+
 ############################
 def main():
+	expected_assembly = "hg38"
 	vcfdir     = "/storage/sequencing/openhumans/fakexomes"
 	maledir    = "{}/males".format(vcfdir)
 	femaledir  = "{}/females".format(vcfdir)
@@ -153,8 +178,8 @@ def main():
 			exit()
 	# vcf files for mom and dad
 	vcdir = {"m": femaledir, "d": maledir}
-	vcf = {"m": choice(os.listdir(vcdir["m"])),
-			"d": choice(os.listdir(vcdir["d"]))}
+	vcf = {"m": choice([fnm for fnm in os.listdir(vcdir["m"]) if expected_assembly in fnm]),
+			"d": choice([fnm for fnm in os.listdir(vcdir["d"]) if expected_assembly in fnm])}
 
 	# read parent variants
 	variants = read_parents(vcdir, vcf)
@@ -164,8 +189,6 @@ def main():
 	print(gender)
 
 	# create progeny
-	# TODO: get rid of positions in child which end up
-	# TODO: with both copies of the allele equal to the reference
 	cross(variants, gender)
 
 	# add 10% mutations which are supposed to be unique for the child - 8% SNV, 1% inserts, 1% dels
@@ -178,18 +201,23 @@ def main():
 	# what is the most compact format I can come up with? would it work if it is all a single string?
 	# freq: 2 digits first sig digit and power
 	# there could be multiple genes separated by ';'
-	# esi - one of exonic, splice, intronic
+	# esi - one of exonic, splice, intronic, upstream, downstream
 	# e can be followed by another: and aaFromPOSaaTo
-	# chrom  ref alt1|alt2  mom1|mom2  pop1|pop2 freq gene:[esi]
-	outname = "{}/{}.vcf".format(progenydir, "test2")
+	# chrom pos  ref alt1|alt2  mom1|mom2  pop1|pop2 freq gene:[esiud]
+	# here we just output the variants, add annotation in the next step
+	outname = "{}/{}.{}.vcf".format(progenydir, "test1", expected_assembly)
 	outf = open(outname, "w")
+	outf.write("# mom: {}   pop: {}  gender: {}\n".format(vcf["m"], vcf["d"], gender))
+	outf.write("# chr  pos  gt  gt_mom  gt_dad\n")
 	for chromosome in [str(i+1) for i in range(22)] + ['X','Y']:
 		for pos, var in variants[chromosome].items():
 			if "c" not in var: continue
+			fix_wt(var, "m", chromosome, gender)  # replace wt with dummy variant (ref, ref)
+			fix_wt(var, "d", chromosome, gender)
+
 			fields = [chromosome, str(pos), allele_compact(var["c"]), allele_compact(var["m"]), allele_compact(var["d"])]
 			outf.write("\t".join(fields)+"\n")
 	outf.close()
-
 
 
 	# create a separate xref table for gene ids

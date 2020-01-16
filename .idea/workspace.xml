@@ -3,8 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="8a8644d6-7ad0-4026-8212-bd51a53e5bfa" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/06_make_progeny.py" beforeDir="false" afterPath="$PROJECT_DIR$/06_make_progeny.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/04_extract_exon_regions.py" beforeDir="false" afterPath="$PROJECT_DIR$/04_extract_exon_regions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/06_make_progeny.py" beforeDir="false" afterPath="$PROJECT_DIR$/07_make_progeny.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -13,37 +13,32 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="DockManager">
+    <window id="2">
+      <content type="file-editors">
+        <state>
+          <leaf>
+            <file leaf-file-name="03_translate_target_regions.py" pinned="false" current-in-tab="true">
+              <entry file="file://$PROJECT_DIR$/03_translate_target_regions.py">
+                <provider selected="true" editor-type-id="text-editor">
+                  <state relative-caret-position="324">
+                    <caret line="58" column="24" lean-forward="true" selection-start-line="58" selection-start-column="24" selection-end-line="58" selection-end-column="24" />
+                  </state>
+                </provider>
+              </entry>
+            </file>
+          </leaf>
+        </state>
+      </content>
+    </window>
+  </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="02_opehumans_data.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/02_opehumans_data.py">
+      <file leaf-file-name="07_make_progeny.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/07_make_progeny.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1512">
-              <caret line="85" column="11" selection-start-line="85" selection-start-column="11" selection-end-line="85" selection-end-column="11" />
-              <folding>
-                <element signature="e#779#805#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="04_extract_exon_regions.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/04_extract_exon_regions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret column="19" selection-end-column="19" />
-              <folding>
-                <element signature="e#1028#1037#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="06_make_progeny.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/06_make_progeny.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="678">
-              <caret line="185" column="64" lean-forward="true" selection-start-line="185" selection-start-column="64" selection-end-line="185" selection-end-column="64" />
+            <state relative-caret-position="108">
+              <caret line="188" column="17" lean-forward="true" selection-start-line="188" selection-start-column="17" selection-end-line="188" selection-end-column="17" />
               <folding>
                 <element signature="e#1552#1561#0" expanded="true" />
               </folding>
@@ -51,11 +46,23 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="05_male_female.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/05_male_female.py">
+      <file leaf-file-name="10_annotation_sanity_check.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/10_annotation_sanity_check.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="594">
-              <caret line="33" selection-start-line="26" selection-end-line="33" />
+            <state relative-caret-position="409">
+              <caret line="117" lean-forward="true" selection-start-line="117" selection-end-line="117" />
+              <folding>
+                <element signature="e#778#787#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="mysql.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fe_utils/mysql.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="18">
+              <caret line="178" column="65" lean-forward="true" selection-start-line="178" selection-start-column="16" selection-end-line="178" selection-end-column="65" />
             </state>
           </provider>
         </entry>
@@ -72,6 +79,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>sample</find>
+      <find>seq_region_id</find>
     </findStrings>
     <replaceStrings>
       <replace>choice</replace>
@@ -84,18 +92,28 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/02_opehumans_data.py" />
-        <option value="$PROJECT_DIR$/04_extract_exon_regions.py" />
         <option value="$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py" />
         <option value="$PROJECT_DIR$/05_male_female.py" />
+        <option value="$PROJECT_DIR$/fe_utils/ensembl.py" />
         <option value="$PROJECT_DIR$/06_make_progeny.py" />
+        <option value="$PROJECT_DIR$/03_translate_target)regions.py" />
+        <option value="$PROJECT_DIR$/fe_utils/utils.py" />
+        <option value="$PROJECT_DIR$/03_translate_target_regions.py" />
+        <option value="$PROJECT_DIR$/04_extract_exon_regions.py" />
+        <option value="$PROJECT_DIR$/06_translate_vcf.py" />
+        <option value="$PROJECT_DIR$/07_make_progeny.py" />
+        <option value="$PROJECT_DIR$/08_annotate.py" />
+        <option value="$PROJECT_DIR$/10_annotate.py" />
+        <option value="$PROJECT_DIR$/08_annotation_sanity_check.py" />
+        <option value="$PROJECT_DIR$/08_gnomad_crossmap.py" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="2025" />
-    <option name="y" value="46" />
-    <option name="width" value="1717" />
-    <option name="height" value="941" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="2004" />
+    <option name="y" value="10" />
+    <option name="width" value="1707" />
+    <option name="height" value="948" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -112,6 +130,11 @@
               <item name="fakexome" type="b2602c69:ProjectViewProjectNode" />
               <item name="fakexome" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="fakexome" type="b2602c69:ProjectViewProjectNode" />
+              <item name="fakexome" type="462c0819:PsiDirectoryNode" />
+              <item name="fe_utils" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -125,6 +148,7 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/fe_utils" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -153,22 +177,21 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1920" y="0" width="1920" height="1080" extended-state="6" />
-    <editor active="true" />
+    <frame x="2004" y="10" width="1707" height="948" extended-state="0" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info id="DB Browser" order="2" />
       <window_info anchor="bottom" id="DB Execution Console" order="7" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Python Console" order="7" />
+      <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Terminal" order="7" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17712177" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32978722" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19952494" />
+      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.0730198" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -179,6 +202,11 @@
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="3" />
+    </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/02_opehumans_data.py">
@@ -208,61 +236,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py">
+    <entry file="file://$PROJECT_DIR$/07_make_progeny.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/06_make_progeny.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="648">
-          <caret line="36" lean-forward="true" selection-start-line="36" selection-end-line="36" />
+        <state relative-caret-position="3312">
+          <caret line="185" column="64" lean-forward="true" selection-start-line="185" selection-start-column="64" selection-end-line="185" selection-end-column="64" />
           <folding>
             <element signature="e#1552#1561#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/02_opehumans_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1512">
-          <caret line="85" column="11" lean-forward="true" selection-start-line="85" selection-start-column="11" selection-end-line="85" selection-end-column="11" />
-          <folding>
-            <element signature="e#779#805#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/04_extract_exon_regions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="19" lean-forward="true" selection-end-column="19" />
-          <folding>
-            <element signature="e#1028#1037#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/06_make_progeny.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18">
-          <caret line="1" column="1" lean-forward="true" selection-start-line="1" selection-start-column="1" selection-end-line="1" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/05_male_female.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="468">
-          <caret line="26" column="55" lean-forward="true" selection-start-line="26" selection-start-column="15" selection-end-line="26" selection-end-column="55" />
         </state>
       </provider>
     </entry>
@@ -293,19 +273,366 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py">
+    <entry file="file://$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py" />
+    <entry file="file://$PROJECT_DIR$/07_make_progeny.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
+        <state relative-caret-position="648">
+          <caret line="36" lean-forward="true" selection-start-line="36" selection-end-line="36" />
+          <folding>
+            <element signature="e#1552#1561#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/06_make_progeny.py">
+    <entry file="file://$PROJECT_DIR$/02_opehumans_data.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="678">
-          <caret line="185" column="64" lean-forward="true" selection-start-line="185" selection-start-column="64" selection-end-line="185" selection-end-column="64" />
+        <state relative-caret-position="1512">
+          <caret line="85" column="11" lean-forward="true" selection-start-line="85" selection-start-column="11" selection-end-line="85" selection-end-column="11" />
+          <folding>
+            <element signature="e#779#805#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/04_extract_exon_regions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="19" lean-forward="true" selection-end-column="19" />
+          <folding>
+            <element signature="e#1028#1037#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/07_make_progeny.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="1" column="1" lean-forward="true" selection-start-line="1" selection-start-column="1" selection-end-line="1" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py" />
+    <entry file="file://$PROJECT_DIR$/05_male_female.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="468">
+          <caret line="26" column="55" lean-forward="true" selection-start-line="26" selection-start-column="15" selection-end-line="26" selection-end-column="55" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/08_annotate_and_add_disease_mutation.py" />
+    <entry file="file://$PROJECT_DIR$/fe_utils/exon.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fe_utils/ensembl.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="173" column="31" selection-start-line="173" selection-start-column="18" selection-end-line="173" selection-end-column="31" />
+          <folding>
+            <element signature="e#233#419#0" />
+            <element signature="e#509#990#0" />
+            <element signature="e#638#686#0" />
+            <element signature="e#925#973#0" />
+            <element signature="e#1103#1850#0" />
+            <element signature="e#1799#1836#0" />
+            <element signature="e#1944#2270#0" />
+            <element signature="e#2388#2696#0" />
+            <element signature="e#2803#3074#0" />
+            <element signature="e#3184#3439#0" />
+            <element signature="e#3375#3423#0" />
+            <element signature="e#3549#3898#0" />
+            <element signature="e#3766#3821#0" />
+            <element signature="e#3852#3878#0" />
+            <element signature="e#4007#5258#0" />
+            <element signature="e#4240#4289#0" />
+            <element signature="e#4738#4836#0" />
+            <element signature="e#5044#5233#0" />
+            <element signature="e#5132#5185#0" />
+            <element signature="e#5642#5697#0" />
+            <element signature="e#5728#5754#0" />
+            <element signature="e#5774#5815#0" />
+            <element signature="e#5896#6900#0" />
+            <element signature="e#6202#6250#0" />
+            <element signature="e#6333#6411#0" />
+            <element signature="e#6333#6405#0" />
+            <element signature="e#6421#6484#0" />
+            <element signature="e#6574#6885#0" />
+            <element signature="e#6700#6748#0" />
+            <element signature="e#6997#7788#0" />
+            <element signature="e#7090#7168#0" />
+            <element signature="e#7090#7162#0" />
+            <element signature="e#7178#7241#0" />
+            <element signature="e#7637#7773#0" />
+            <element signature="e#7879#8139#0" />
+            <element signature="e#8051#8125#0" />
+            <element signature="e#8237#9205#0" />
+            <element signature="e#8452#8498#0" />
+            <element signature="e#8729#8777#0" />
+            <element signature="e#8813#8821#0" />
+            <element signature="e#9106#9205#0" />
+            <element signature="e#9299#10835#0" />
+            <element signature="e#9603#9647#0" />
+            <element signature="e#9690#10090#1" />
+            <element signature="e#11013#12316#0" />
+            <element signature="e#11168#11290#0" />
+            <element signature="e#11440#11513#0" />
+            <element signature="e#11810#11908#0" />
+            <element signature="e#11957#12109#0" />
+            <element signature="e#12059#12090#0" />
+            <element signature="e#12170#12281#0" />
+            <element signature="e#12191#12214#0" />
+            <element signature="e#12417#12735#0" />
+            <element signature="e#12455#12505#0" />
+            <element signature="e#12846#13178#0" />
+            <element signature="e#12862#12912#0" />
+            <element signature="e#13255#13459#0" />
+            <element signature="e#13371#13400#0" />
+            <element signature="e#13570#14113#0" />
+            <element signature="e#13646#13728#0" />
+            <element signature="e#13769#13846#0" />
+            <element signature="e#13856#13965#0" />
+            <element signature="e#14038#14093#0" />
+            <element signature="e#14191#14437#0" />
+            <element signature="e#14372#14422#0" />
+            <element signature="e#14523#14952#0" />
+            <element signature="e#14724#14936#0" />
+            <element signature="e#15050#15470#0" />
+            <element signature="e#15123#15214#0" />
+            <element signature="e#15245#15390#0" />
+            <element signature="e#15571#15869#0" />
+            <element signature="e#15621#15674#0" />
+            <element signature="e#15961#16186#0" />
+            <element signature="e#15977#16030#0" />
+            <element signature="e#16285#16606#0" />
+            <element signature="e#16301#16354#0" />
+            <element signature="e#16700#16918#0" />
+            <element signature="e#16716#16769#0" />
+            <element signature="e#17011#17231#0" />
+            <element signature="e#17027#17080#0" />
+            <element signature="e#17338#17593#0" />
+            <element signature="e#17354#17407#0" />
+            <element signature="e#17696#18089#0" />
+            <element signature="e#17712#17764#0" />
+            <element signature="e#18022#18072#0" />
+            <element signature="e#18188#18609#0" />
+            <element signature="e#18204#18257#0" />
+            <element signature="e#18472#18520#0" />
+            <element signature="e#18719#19343#0" />
+            <element signature="e#18735#18788#0" />
+            <element signature="e#18814#18937#0" />
+            <element signature="e#18947#19112#0" />
+            <element signature="e#19164#19249#0" />
+            <element signature="e#19179#19237#0" />
+            <element signature="e#19449#19683#0" />
+            <element signature="e#19465#19515#0" />
+            <element signature="e#19778#20319#0" />
+            <element signature="e#19794#19846#0" />
+            <element signature="e#19876#20037#0" />
+            <element signature="e#20047#20167#0" />
+            <element signature="e#20218#20279#0" />
+            <element signature="e#20415#20663#0" />
+            <element signature="e#20431#20481#0" />
+            <element signature="e#20771#21540#0" />
+            <element signature="e#20787#20840#0" />
+            <element signature="e#21082#21141#0" />
+            <element signature="e#21144#21246#0" />
+            <element signature="e#21647#22097#0" />
+            <element signature="e#21663#21716#0" />
+            <element signature="e#22020#22077#0" />
+            <element signature="e#22203#23751#0" />
+            <element signature="e#22219#22272#0" />
+            <element signature="e#22306#22581#0" />
+            <element signature="e#22622#22912#0" />
+            <element signature="e#22923#23137#0" />
+            <element signature="e#23212#23352#0" />
+            <element signature="e#23212#23259#0" />
+            <element signature="e#23355#23457#0" />
+            <element signature="e#23857#24648#0" />
+            <element signature="e#23889#23941#0" />
+            <element signature="e#23964#24162#0" />
+            <element signature="e#24186#24394#0" />
+            <element signature="e#24404#24634#0" />
+            <element signature="e#24760#25249#0" />
+            <element signature="e#24789#24842#0" />
+            <element signature="e#24957#25124#0" />
+            <element signature="e#25020#25112#0" />
+            <element signature="e#25146#25234#0" />
+            <element signature="e#25336#25915#0" />
+            <element signature="e#25395#25506#0" />
+            <element signature="e#25676#25883#0" />
+            <element signature="e#26003#26449#0" />
+            <element signature="e#26293#26428#0" />
+            <element signature="e#26556#26946#0" />
+            <element signature="e#26871#26926#0" />
+            <element signature="e#27060#27514#0" />
+            <element signature="e#27439#27494#0" />
+            <element signature="e#27565#28038#0" />
+            <element signature="e#27565#27597#0" />
+            <element signature="e#27948#28013#0" />
+            <element signature="e#28089#28360#0" />
+            <element signature="e#28089#28121#0" />
+            <element signature="e#28285#28340#0" />
+            <element signature="e#28422#28621#0" />
+            <element signature="e#28624#28640#0" />
+            <element signature="e#28826#30047#0" />
+            <element signature="e#29165#29245#0" />
+            <element signature="e#29377#30032#0" />
+            <element signature="e#30172#32145#0" />
+            <element signature="e#30172#30233#0" />
+            <element signature="e#30908#30955#0" />
+            <element signature="e#31057#31978#0" />
+            <element signature="e#31404#31483#0" />
+            <element signature="e#31404#31418#0" />
+            <element signature="e#31508#31978#0" />
+            <element signature="e#31788#31871#0" />
+            <element signature="e#31788#31804#0" />
+            <element signature="e#31993#32103#0" />
+            <element signature="e#32213#32525#0" />
+            <element signature="e#32446#32500#0" />
+            <element signature="e#32591#32983#0" />
+            <element signature="e#32635#32778#0" />
+            <element signature="e#32709#32778#0" />
+            <element signature="e#32908#32963#0" />
+            <element signature="e#33056#33333#0" />
+            <element signature="e#33399#33795#0" />
+            <element signature="e#33447#33590#0" />
+            <element signature="e#33521#33590#0" />
+            <element signature="e#33720#33775#0" />
+            <element signature="e#33858#34225#0" />
+            <element signature="e#33874#34017#0" />
+            <element signature="e#33948#34017#0" />
+            <element signature="e#34151#34206#0" />
+            <element signature="e#34313#34984#0" />
+            <element signature="e#34329#34472#0" />
+            <element signature="e#34403#34472#0" />
+            <element signature="e#34894#34970#0" />
+            <element signature="e#35082#36061#0" />
+            <element signature="e#35353#35401#0" />
+            <element signature="e#35411#36043#0" />
+            <element signature="e#35437#35475#0" />
+            <element signature="e#35479#35542#0" />
+            <element signature="e#35637#35851#0" />
+            <element signature="e#35875#36043#0" />
+            <element signature="e#36099#36931#0" />
+            <element signature="e#36338#36406#0" />
+            <element signature="e#36551#36639#0" />
+            <element signature="e#36661#36893#0" />
+            <element signature="e#36786#36826#0" />
+            <element signature="e#36974#37463#0" />
+            <element signature="e#37172#37240#0" />
+            <element signature="e#37388#37443#0" />
+            <element signature="e#37512#37711#0" />
+            <element signature="e#37767#38009#0" />
+            <element signature="e#37937#37984#0" />
+            <element signature="e#38070#38316#0" />
+            <element signature="e#38248#38296#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fe_utils/CrossMap.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fe_utils/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="59" column="41" selection-start-line="59" selection-start-column="41" selection-end-line="59" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/02_opehumans_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="342">
+          <caret line="85" column="11" selection-start-line="85" selection-start-column="11" selection-end-line="85" selection-end-column="11" />
+          <folding>
+            <element signature="e#779#805#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/05_male_female.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="432">
+          <caret line="36" column="34" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/06_translate_vcf.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="702">
+          <caret line="79" selection-start-line="79" selection-end-line="79" />
+          <folding>
+            <element signature="e#1287#1296#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/04_extract_exon_regions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret line="1" column="1" lean-forward="true" selection-start-line="1" selection-start-column="1" selection-end-line="1" selection-end-column="1" />
+          <folding>
+            <element signature="e#1028#1037#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fe_utils/mysql.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="178" column="65" lean-forward="true" selection-start-line="178" selection-start-column="16" selection-end-line="178" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/12_annotate.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="319">
+          <caret line="76" column="42" lean-forward="true" selection-start-line="76" selection-start-column="42" selection-end-line="76" selection-end-column="42" />
+          <folding>
+            <element signature="e#778#787#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/lib/python3/dist-packages/numpy/matlib.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="219" column="4" selection-start-line="219" selection-start-column="4" selection-end-line="219" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/07_make_progeny.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="188" column="17" lean-forward="true" selection-start-line="188" selection-start-column="17" selection-end-line="188" selection-end-column="17" />
           <folding>
             <element signature="e#1552#1561#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/03_translate_target_regions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="324">
+          <caret line="58" column="24" lean-forward="true" selection-start-line="58" selection-start-column="24" selection-end-line="58" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/08_gnomad_crossmap.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="337">
+          <caret line="35" column="34" lean-forward="true" selection-start-line="35" selection-start-column="34" selection-end-line="35" selection-end-column="34" />
+          <folding>
+            <element signature="e#859#868#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/10_annotation_sanity_check.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="409">
+          <caret line="117" lean-forward="true" selection-start-line="117" selection-end-line="117" />
+          <folding>
+            <element signature="e#778#787#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -18,10 +18,14 @@
 # Contact: ivana.mihalek@gmail.com, ivana.mihalek@uniri.hr
 #
 
+
 # use agilent target regions
 # https://kb.10xgenomics.com/hc/en-us/articles/115004150923-Where-can-I-find-the-Agilent-Target-BED-files-
+# the website they are talking about is here https://earray.chem.agilent.com/suredesign/index.htm
+# of note: the the newer files  refer to db=hg38, however  the openhuman files refer to hg19
+# the older files result in <20K variants (smaller coverage) while the newer give ~50K
+# for the purpose of the simulator smaller should do - faster download, if nothing else
 
-# /storage/sequencing/openhumans/agilent_target_regions.S30409818.bed --> refers to hg19, as do PGP vcf files
 
 import os
 from intervaltree import IntervalTree
@@ -39,7 +43,8 @@ def read_regions(bedfile):
 				if 'hg19' in line or 'hg38' in line:
 					assembly_ok = True
 				continue
-			[char,start,end] = fields
+			if len(fields)<3: continue # not sure what that might be
+			[char,start,end] = fields[:3]
 			if char not in regions: regions[char] = []
 			# +1 bcs  intervaltree assumes semiopen intervals
 			regions[char].append((int(start),int(end)+1))
@@ -60,20 +65,20 @@ def trees_from_intervals(regions):
 
 
 #############################
-def extract_exome(indir, outdir, fnm, interval_tree, verbose=True):
+def extract_exome(indir, outdir, fnm, interval_tree, expected_assembly, verbose=True):
 	# checking integer in region: 10000 <= number <= 30000
 	inf = open("{}/{}".format(indir, fnm), "r")
-	# check we have the xpected assembly
+	# check we have the expected assembly
 	assembly_ok = False
 	for line in inf:
 		if line[:2]=='##': # comment/meta info line
-			if 'hg19' in line or 'hg38' in line:
+			if expected_assembly in line:
 				assembly_ok = True
 				break
 	if not assembly_ok:
-		print('no line confirming hg19 found in', "{}/{}".format(indir, fnm))
+		print('no line confirming {} found in', "{}/{}".format(expected_assembly, indir, fnm))
 
-	outf = open("{}/{}".format(outdir, fnm.replace(".vcf", ".fakexome.vcf")), "w")
+	outf = open("{}/{}".format(outdir, fnm.replace(".vcf", ".fakexome.%s.vcf"%expected_assembly)), "w")
 
 	inf.seek(0, 0)  # rewind
 	total = {}
@@ -111,8 +116,9 @@ def extract_exome(indir, outdir, fnm, interval_tree, verbose=True):
 
 ############################
 def main():
+	expected_assembly = "hg19"
 	vcfdir  = "/storage/sequencing/openhumans"
-	bedfile = "{}/agilent_target_regions.S30409818.bed".format(vcfdir)
+	bedfile = "{}/agilent_target_regions.S07084713.{}.bed".format(vcfdir, expected_assembly)
 	orig = "{}/orig".format(vcfdir)
 	for dep in [vcfdir, bedfile, orig]:
 		if not os.path.exists(dep):
@@ -135,7 +141,7 @@ def main():
 
 	for (dirpath, dirnames, filenames) in os.walk(orig):
 		for fnm in filter(lambda f:  f[-4:]=='.vcf', filenames):
-			extract_exome(orig, fake_exome_dir, fnm, interval_tree)
+			extract_exome(orig, fake_exome_dir, fnm, interval_tree, expected_assembly)
 
 	return
 
