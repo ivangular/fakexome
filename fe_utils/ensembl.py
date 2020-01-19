@@ -1144,6 +1144,28 @@ def gene2stable(cursor, gene_id=None, db_name=None):
 
 
 ########
+def transcript2stable(cursor, transcript_id=None, db_name=None):
+	if not transcript_id: return ""
+
+	if (db_name):
+		qry = "use %s " % db_name
+		rows = search_db(cursor, qry)
+		if (rows):
+			rows = search_db(cursor, qry, verbose=True)
+			print(rows)
+			exit(1)
+
+	qry = "select stable_id from transcript where transcript_id=%d" % transcript_id
+	rows = search_db(cursor, qry, verbose=False)
+
+	if (not rows):
+		rows = search_db(cursor, qry, verbose=True)
+		return ""
+
+	return rows[0][0]
+
+
+########
 def gene_member2stable(cursor, gene_id=None, db_name=None):
 	if not gene_id: return ""
 	qry = "select stable_id "
