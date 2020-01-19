@@ -22,6 +22,16 @@ import os
 from fe_utils.mysql import *
 from fe_utils.ensembl import *
 
+# there could be multiple genes separated by ';'
+# esi - one of exonic, splice, intronic, upstream, downstream
+# e can be followed by another: and aaFromPOSaaTo
+# chrom pos  ref alt1|alt2  mom1|mom2  pop1|pop2  gene:[esiud] freq
+
+# TODO: reporting pseudogenes? (possible misalignment of fragments)
+
+
+stable2approved = {}
+
 
 ####################################
 def get_seq_region_ids(cursor):
@@ -32,30 +42,67 @@ def get_seq_region_ids(cursor):
 	return seq_region_id
 
 
-stable2approved = {}
-
-
+######
 def find_approved(cursor, stable_id):
 	ret = error_intolerant_search(cursor, "select approved_symbol from icgc.hgnc where  ensembl_gene_id='%s'"%stable_id)
 	stable2approved[stable_id] = (ret[0][0] if ret else "anon")
 
 
+######
 def annotate(cursor, seq_region_id, line):
 	if line[0]=='#': return ""
-	[chrom,  pos,  gt,  gt_mom,  gt_dad] = line.strip().split("\t")
-	pos = int(pos)
-	#rint(chrom,  pos,  gt,  gt_mom,  gt_dad)
-	qry  = "select gene_id, stable_id from gene where seq_region_id=%d "%seq_region_id[chrom]
-	qry += "and seq_region_start-100<=%d and %d<=seq_region_end+100" % (pos, pos)
+	[chrom,  variant_pos,  gt,  gt_mom,  gt_dad] = line.strip().split("\t")
+	variant_pos = int(variant_pos)
+	# print(chrom,  pos,  gt,  gt_mom,  gt_dad)
+	qry  = "select gene_id, stable_id, seq_region_start, seq_region_end from gene where seq_region_id=%d "%seq_region_id[chrom]
+	qry += "and seq_region_start-100<=%d and %d<=seq_region_end+100" % (variant_pos, variant_pos)
 	ret  = error_intolerant_search(cursor, qry)
 	if not ret:
 		print("no return for", qry)
 		return ""
-	for [gene_id, stable_id] in ret:
-		if not stable_id in stable2approved:
+
+	print("============     %d" % variant_pos)
+	gene_annotation_fields = []
+	for [gene_id, stable_id, seq_region_start, seq_region_end] in ret:
+		if stable_id not in stable2approved: # see if we have it stored by any chance
 			find_approved(cursor, stable_id)
-		print(chrom,  pos, gene_id, stable_id, stable2approved[stable_id])
-	#xit()
+		print(chrom,  variant_pos, gene_id, stable_id, stable2approved[stable_id])
+		# find all canonical exons in this gene
+		qry = "select start_in_gene, end_in_gene from gene2exon  "
+		qry += "where gene_id=%d and is_canonical=1" % gene_id
+		ret2 = error_intolerant_search(cursor, qry)
+		if  not ret2:
+			print("no exons found")
+			continue
+		variant_pos_in_gene = variant_pos - seq_region_start
+		exon_intervals =  sorted(ret2, key=lambda x: x[0])
+
+
+		placed = False
+		location_code = "?"
+		if variant_pos_in_gene < exon_intervals[0][0]:
+			# print("   %d  <---- upstream" % variant_pos_in_gene)
+			placed = True
+			location_code = "u"
+		exon_id = 0
+		while not placed and exon_id<len(exon_intervals):
+			[start, end] = exon_intervals[exon_id]
+			#print(start, end)
+			if not placed and variant_pos_in_gene < start:
+				#print("   %d  <---- intronic" % variant_pos_in_gene)
+				location_code = "i"
+				placed = True
+			elif not placed and variant_pos_in_gene <= end:
+				#print("   %d  <---- exonic" % variant_pos_in_gene)
+				location_code = "e"
+				placed = True
+			exon_id += 1
+		if not placed and variant_pos_in_gene < exon_intervals[-1][1]:
+			#print("   %d  <---- downstream" % variant_pos_in_gene)
+			location_code = "d"
+		gene_annotation_fields.append("%s:%s"%(stable2approved[stable_id], location_code))
+	print(";".join(gene_annotation_fields))
+
 
 ############################
 def main():
@@ -84,7 +131,7 @@ def main():
 	inf = open(fpath,"r")
 	for line in inf:
 		line_annotated = annotate(cursor, seq_region_id, line)
-		#print(line_annotated)
+		# print(line_annotated)
 	inf.close()
 
 	cursor.close()

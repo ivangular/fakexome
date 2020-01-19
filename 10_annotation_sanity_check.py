@@ -23,20 +23,13 @@ from random import random
 
 from fe_utils.mysql import *
 from fe_utils.ensembl import *
-
-# there could be multiple genes separated by ';'
-# esi - one of exonic, splice, intronic, upstream, downstream
-# e can be followed by another: and aaFromPOSaaTo
-# chrom pos  ref alt1|alt2  mom1|mom2  pop1|pop2 freq gene:[esiud]
-
-# TODO: reporting pseudogenes? (possible misalignment of fragments)
-
 stable2approved = {}
+
 
 ####################################
 def get_seq_region_ids(cursor):
 	# coord_system with id 4 is chromosome for GRCh38
-	qry = "select name, seq_region_id from seq_region where coord_system_id=4 "
+	qry  = "select name, seq_region_id from seq_region where coord_system_id=4 "
 	qry += "and length(name)<3"
 	seq_region_id = dict(hard_landing_search(cursor,qry))
 	return seq_region_id
