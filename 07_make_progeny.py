@@ -33,7 +33,7 @@
 #chr	676339	.	A	G	.	PASS	.	GT	0/1
 #chr	676339	.	AAC	A	.	PASS	.	GT	1/0
 
-import os
+import os, sys
 from random import choice
 
 ############################
@@ -155,7 +155,7 @@ def fix_wt(var, parent, chromosome, gender):
 
 	if parent in var and len(var[parent])>0: return
 
-	ref = var["c"][0][0]
+	ref = var["c"][0][0][0]
 	var[parent] = [(ref, ref), (ref, ref)]
 	# special cases:
 	if chromosome == "X" and parent=="d":
@@ -166,18 +166,7 @@ def fix_wt(var, parent, chromosome, gender):
 
 
 ############################
-def main():
-	expected_assembly = "hg38"
-	vcfdir     = "/storage/sequencing/openhumans/fakexomes"
-	maledir    = "{}/males".format(vcfdir)
-	femaledir  = "{}/females".format(vcfdir)
-	progenydir = "{}/progeny".format(vcfdir)
-	for dep in [vcfdir, maledir, femaledir, progenydir]:
-		if not os.path.exists(dep):
-			print(dep, "not found")
-			exit()
-	# vcf files for mom and dad
-	vcdir = {"m": femaledir, "d": maledir}
+def make_a_child(vcdir, expected_assembly, progenydir, childfnm):
 	vcf = {"m": choice([fnm for fnm in os.listdir(vcdir["m"]) if expected_assembly in fnm]),
 			"d": choice([fnm for fnm in os.listdir(vcdir["d"]) if expected_assembly in fnm])}
 
@@ -192,6 +181,7 @@ def main():
 	cross(variants, gender)
 
 	# add 10% mutations which are supposed to be unique for the child - 8% SNV, 1% inserts, 1% dels
+	# select from other annotated children
 
 	# add the disease mutation(s)
 
@@ -205,7 +195,7 @@ def main():
 	# e can be followed by another: and aaFromPOSaaTo
 	# chrom pos  ref alt1|alt2  mom1|mom2  pop1|pop2 freq gene:[esiud]
 	# here we just output the variants, add annotation in the next step
-	outname = "{}/{}.{}.vcf".format(progenydir, "test1", expected_assembly)
+	outname = "{}/{}.{}.vcf".format(progenydir, childfnm, expected_assembly)
 	outf = open(outname, "w")
 	outf.write("# mom: {}   pop: {}  gender: {}\n".format(vcf["m"], vcf["d"], gender))
 	outf.write("# chr  pos  gt  gt_mom  gt_dad\n")
@@ -218,11 +208,26 @@ def main():
 			fields = [chromosome, str(pos), allele_compact(var["c"]), allele_compact(var["m"]), allele_compact(var["d"])]
 			outf.write("\t".join(fields)+"\n")
 	outf.close()
-
-
-	# create a separate xref table for gene ids
-
 	return
+
+
+
+############################
+def main():
+
+	expected_assembly = "hg38"
+	vcfdir     = "/storage/sequencing/openhumans/fakexomes"
+	maledir    = "{}/males".format(vcfdir)
+	femaledir  = "{}/females".format(vcfdir)
+	progenydir = "{}/progeny".format(vcfdir)
+	for dep in [vcfdir, maledir, femaledir, progenydir]:
+		if not os.path.exists(dep):
+			print(dep, "not found")
+			exit()
+	# vcf files for mom and dad
+	vcdir = {"m": femaledir, "d": maledir}
+	for i in range(15):
+		make_a_child(vcdir, expected_assembly, progenydir, "child%d"%i)
 
 
 #########################################

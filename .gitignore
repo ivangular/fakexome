@@ -1,0 +1,79 @@
+
+
+# Compiled source #
+###################
+struct
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+rbf
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.bz2
+!ensembl_gene2trans_stable.tsv.bz2
+
+# Logs and databases #
+######################
+wget-log*
+*.log
+*.sql
+*.sqlite
+*.tsv
+*.vcf
+*.csv
+*~
+*.fa
+*.afa
+*.table
+*.json
+
+pdbchains
+sys_tfm
+*.aln
+*to_*.pdb
+*seqs_not_found
+
+*.pml
+*.input
+*.output
+
+*.txt # ignore txt
+!timing.txt  #Except for timing.txt
+scratch/
+old/
+*blah*
+*input
+coapp_tables/
+output/
+tsvs/
+gene_groups/
+genes/
+.idea
+*function
+annovar/
+locations/
+casedev/
+
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+/nbproject/private/

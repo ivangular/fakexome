@@ -34,6 +34,23 @@ from Bio.Alphabet import generic_dna
 
 stable2approved_symbol = {}
 stable2approved_name = {}
+stable2uniprot = {}
+
+
+def read_omim(omim_path):
+	if not os.path.exists(omim_path):
+		print(omim_path, "not found")
+		return {}
+	hgnc2omim = {}
+	with open(omim_path, "r") as inf:
+		for line in inf:
+			fields = line.strip().split()
+			if len(fields)<2: continue
+			[omim, hgnc] = fields[:2]
+			hgnc2omim[hgnc] = omim
+	return hgnc2omim
+
+
 
 ####################################
 def get_seq_region_ids(cursor):
@@ -46,10 +63,17 @@ def get_seq_region_ids(cursor):
 
 ######
 def find_approved(cursor, stable_id):
-	ret = error_intolerant_search(cursor, "select approved_symbol, approved_name from icgc.hgnc where  ensembl_gene_id='%s'"%stable_id)
-	stable2approved_symbol[stable_id] = (ret[0][0] if ret else "anon")
-	stable2approved_name[stable_id] = (ret[0][1] if ret else "anon")
-
+	qry  = "select approved_symbol, approved_name, uniprot_ids "
+	qry += "from icgc.hgnc where  ensembl_gene_id='%s'"%stable_id
+	ret = error_intolerant_search(cursor, qry)
+	if not ret:
+		stable2approved_symbol[stable_id] = "anon"
+		stable2approved_name[stable_id] =  "anon"
+		stable2uniprot[stable_id] = "anon"
+	else:
+		stable2approved_symbol[stable_id] = ret[0][0] if ret[0][0] else "anon"
+		stable2approved_name[stable_id] = ret[0][1] if ret[0][1] else "anon"
+		stable2uniprot[stable_id] = ret[0][2].split(",")[0].replace(" ", "") if ret[0][2] else "anon"
 
 #####
 # protein coding genes do not have  "-" in their name
@@ -94,7 +118,13 @@ def is_immune(symbol, name):
 	return False
 
 
-def location_within_protein_coding_gene(cursor, gene_id, variant_pos_in_gene):
+def is_readthrough(name):
+	if "readthrough" in name:
+		return True
+	return False
+
+
+def location_within_protein_coding_gene(cursor, gene_id, variant_pos_in_gene, verbose=False):
 
 	# find all canonical exons in this gene
 	qry = "select start_in_gene, end_in_gene from gene2exon  "
@@ -105,18 +135,23 @@ def location_within_protein_coding_gene(cursor, gene_id, variant_pos_in_gene):
 
 	exon_intervals = sorted(ret2, key=lambda x: x[0])
 
-
+	if verbose:
+		print()
+		print(exon_intervals)
 	placed = False
 	location_code = "?"
 	if variant_pos_in_gene < exon_intervals[0][0]:
-		# print("   %d  <---- upstream" % variant_pos_in_gene)
+		if verbose:  print("   %d  <---- upstream" % variant_pos_in_gene)
 		placed = True
 		location_code = "u"
 
 	exon_id = 0
+
 	while not placed and exon_id<len(exon_intervals):
+		tot_exons = len(exon_intervals)
+		tot_introns = tot_exons -1
 		[start, end] = exon_intervals[exon_id]
-		#print(start, end)
+		if verbose: print(start, end)
 		if not placed:
 			if variant_pos_in_gene < start:
 				# is this close enough to be called splice site?
@@ -125,30 +160,32 @@ def location_within_protein_coding_gene(cursor, gene_id, variant_pos_in_gene):
 				if previous_splice or this_splice:
 					location_code = "s"
 				else:
-					#print("   %d  <---- intronic" % variant_pos_in_gene)
-					location_code = "i"
+					if verbose:
+						# this would be prev id if we are couting from 1
+						print("   %d  <---- intronic  (intron %d of %d)" % (variant_pos_in_gene, exon_id, tot_introns))
+					location_code = "intr"
 				placed = True
 				break
 			elif variant_pos_in_gene <= end:
-				#print("   %d  <---- exonic" % variant_pos_in_gene)
+				if verbose: print("   %d  <---- exonic (exon %d of %d)" % (variant_pos_in_gene, exon_id+1, tot_exons))
 				location_code = "e"
 				placed = True
 				break
 		exon_id += 1
 	if not placed:
-		#print("   %d  <---- downstream" % variant_pos_in_gene)
+		if verbose: print("   %d  <---- downstream" % variant_pos_in_gene)
 		location_code = "d"
 
 	return location_code
 
 
 ######
-def genome2cds_pos(cursor, gene_id, variant_position_in_gene):
+def genome2cds_pos(cursor, gene_id, variant_position_in_gene, strand):
 	# find all canonical exons in this gene
 	qry  = "select start_in_gene, end_in_gene, canon_transl_start, canon_transl_end from gene2exon "
 	qry += "where gene_id=%d and is_canonical=1 " % gene_id
 	ret = error_intolerant_search(cursor, qry)
-	if not ret: return None  # some problem occured
+	if not ret: return None  # some problem occurred
 
 	exon_intervals = sorted(ret, key=lambda x: x[0]) # <--- important
 
@@ -156,35 +193,55 @@ def genome2cds_pos(cursor, gene_id, variant_position_in_gene):
 	reading_coding_exons = False
 	# cds_start, cds_end represent the position in the exon
 	# this way of doing things comes from ensembl, not from me
+	cds_start_in_gene = [x[2] for x in exon_intervals if x[2]>=0][0]
+	cds_end_in_gene = [x[3] for x in exon_intervals if x[3]>=0][0]
+	# if cds_start_in_gene == -1 or cds_end_in_gene == -1:
+	# 	print("cds start/end not properly specified, gene_id", gene_id)
+
 	for [exon_start, exon_end, cds_start, cds_end] in  exon_intervals:
-		if cds_start>0:
-			length.append(exon_end - exon_start + 1 - (cds_start - 1))
-			reading_coding_exons = True
-			continue
-		if cds_end>0:
-			length.append(cds_end)
-			reading_coding_exons = False
-			continue
-		if reading_coding_exons:
-			length.append(exon_end-exon_start+1)
-		else:
+		if exon_end<cds_start_in_gene or cds_end_in_gene<exon_start:
 			length.append(0)
+		else:
+			start =  max(exon_start, cds_start_in_gene)
+			end = min (exon_end, cds_end_in_gene)
+			length.append(end-start+1)
+
 
 	# sanity checking
 	if sum(length)%3>0:
-		print("CDS length not divisible by 3, gene_id", gene_id)
-		# there are cases like that; in ENsmebl they are flagged as CDS 5' or 3' incomplete
+		print("CDS length not divisible by 3, gene_id {}  length {} ".format(gene_id, sum(length)))
+		print(length)
+		# there are cases like that; in Ensembl they are flagged as CDS 5' or 3' incomplete
 		# for en example see ENST00000431696
 		# there is nothing we can do except hope that it is not the case with the canonical sequence
-		return None
+		# exit()
+		return "err03"
 
 	cds_position = None
-	for i in  range(len(exon_intervals)):
-		[exon_start, exon_end, cds_start, cds_end] = exon_intervals[i]
-		start = exon_start if cds_start==0 else  exon_start + cds_start - 1
-		end   = exon_end if cds_end==0 else exon_start + cds_end - 1
-		if start<=variant_position_in_gene<=end:
-			cds_position = sum(length[:i]) + variant_position_in_gene - start
+	if variant_position_in_gene<cds_start_in_gene:
+		cds_position="5utr"
+	elif variant_position_in_gene>cds_end_in_gene:
+		cds_position="3utr"
+	else:
+		exon_i = -1
+		for i in range(len(exon_intervals)):
+			[exon_start, exon_end, cds_start, cds_end] = exon_intervals[i]
+			if exon_end<cds_start_in_gene: continue
+			if exon_start>cds_end_in_gene: break
+			if exon_start <= variant_position_in_gene <= exon_end:
+				start = max(exon_start, cds_start_in_gene)
+				cds_position = sum(length[:i]) + variant_position_in_gene - start
+				exon_i = i
+
+		if exon_i==-1:
+			print ("if we are here, the variant should be xonic (?)")
+			return "err04"
+
+	if cds_position and strand==-1:
+		if type(cds_position)==str and "utr" in cds_position:
+			cds_position = "3utr" if cds_position=="5utr" else "5utr"
+		else:
+			cds_position = sum(length) - cds_position - 1  # we count from 0
 
 	return cds_position
 
@@ -193,7 +250,7 @@ def genome2cds_pos(cursor, gene_id, variant_position_in_gene):
 def find_aa_change(coding_seq, strand, cds_position, nt_from, nt_to):
 	if not coding_seq  or 'UNAVAILABLE' in coding_seq: return None
 	complement = {'A':'T', 'T':'A', 'C':'G', 'G':'C'}
-	if strand=="-1":
+	if strand==-1:
 		nt_from = complement[nt_from]
 		nt_to = complement[nt_to]
 
@@ -202,14 +259,14 @@ def find_aa_change(coding_seq, strand, cds_position, nt_from, nt_to):
 	pep_pos   = int(cds_position/3)
 	within_codon_position = cds_position%3
 
-
 	codon_from = codon_seq[pep_pos]
 	if codon_from[within_codon_position] != nt_from:
-		print(cds_position)
-		print(codon_seq[:3])
-		print(codon_seq[pep_pos-1:pep_pos+2])
-		print(strand, "ref codon mismatch", codon_from[within_codon_position],  nt_from)
-		exit()
+		# print(cds_position)
+		# print(codon_seq[:3])
+		# print(codon_seq[pep_pos-1:pep_pos+2])
+		# print(strand, "ref codon mismatch {} in codon {} (expected {})".format(codon_from[within_codon_position], codon_from, nt_from))
+		# TODO: what exactly do you make of errors in the input?
+		return "err02"
 
 	codon_to = "".join([nt_to if i==within_codon_position else codon_from[i] for i in range(3)])
 
@@ -220,7 +277,6 @@ def find_aa_change(coding_seq, strand, cds_position, nt_from, nt_to):
 
 	pep_pos += 1  # back to counting positions from 1
 	change_string= "{}{}{}".format(aa_from, pep_pos, aa_to)
-	print(" **** ", change_string)
 	return change_string
 
 
@@ -231,26 +287,94 @@ def protein_level_change(cursor, gene_id, canonical_transcript_id, variant_pos_i
 	qry = "select sequence from icgc.ensembl_coding_seqs where transcript_id='%s'" %  enst
 	ret = search_db(cursor, qry, verbose=False)
 	if not ret:
-		print ("sequence not found for transcript_id='%s'" %  enst)
-		return None
+		# print ("sequence not found for transcript_id='%s'" %  enst)
+		return "err01"
 	coding_seq = ret[0][0]
 
-	cds_position = genome2cds_pos(cursor, gene_id, variant_pos_in_gene)
+	cds_position = genome2cds_pos(cursor, gene_id, variant_pos_in_gene, strand)
 	if not cds_position: return None
-	change_string = find_aa_change(coding_seq, strand, cds_position, nt_from, nt_to)
+	if type(cds_position)==str: return cds_position
 
+	change_string = find_aa_change(coding_seq, strand, cds_position, nt_from, nt_to)
 	return change_string
 
 
 ######
-def annotate(cursor, seq_region_id, line):
-	if line[0]=='#': return ""
+def exonic_variant_annotation(cursor,  gene_id, canonical_transcript_id, variant_pos_in_gene, gt, strand):
 
+	annotation = ""
+	exonic_annotation = []
+	prev_allele = ""
+	for allele in gt.split("|"):
+		if allele==prev_allele: continue
+		[nt_from, nt_to] = allele.split(":")
+		if nt_from==nt_to:
+			exonic_annotation.append("none")
+		else:
+			if len(nt_from)==1 and len(nt_to)==1:
+				aa_change = protein_level_change(cursor,  gene_id, canonical_transcript_id,
+												variant_pos_in_gene, nt_from, nt_to, strand)
+				if not aa_change: aa_change="unk"
+				exonic_annotation.append(aa_change)
+			elif abs(len(nt_from)-len(nt_to))%3==0:
+				exonic_annotation.append("infrm")
+			else:
+				exonic_annotation.append("indel")
+		prev_allele = allele
+	if len(exonic_annotation) > 0:
+		annotation += ":" + "|".join(exonic_annotation)
+	return annotation
+
+
+######
+from math import log10
+
+def get_gnomad_freqs(cursor, chrom, variant_pos, gt):
+
+	prev_allele = ""
+	prev_om = ""
+	order_of_mag = [] # negative exponents of 10
+	for allele in gt.split("|"):
+		[ref, variant] = allele.split(":")
+		if allele == prev_allele:
+			order_of_mag.append(prev_om)
+		else:
+			if ref==variant:
+				om = "0"
+			else:
+				qry = "select variant_count, total_count from gnomad.freqs_chr_%s " % chrom
+				qry += "where position = %d and variant = '%s'" % (variant_pos, variant)
+				ret = error_intolerant_search(cursor,qry)
+				if not ret:
+					om = "9"
+				else:
+					[variant_ct, tot_ct] = ret[0]
+					if tot_ct ==0:
+						om = "9"
+					else:
+						om = "%1.f"%round(-log10(variant_ct/tot_ct),0)
+			order_of_mag.append(om)
+			prev_allele = allele
+			prev_om = om
+
+	return "|".join(order_of_mag)
+
+#####
+
+
+######
+def annotate(cursor, seq_region_id, line):
 	gene_annotation_fields = []
 
 	[chrom,  variant_pos,  gt,  gt_mom,  gt_dad] = line.strip().split("\t")
+
 	variant_pos = int(variant_pos)
+	# get frequency
+	single_digit_freq = get_gnomad_freqs(cursor, chrom, variant_pos, gt)
+
+	strand = 0 # strand is meaningless if we are intergenic
 	# print(chrom,  pos,  gt,  gt_mom,  gt_dad)
+	# flags:
 	qry  = "select gene_id, stable_id, canonical_transcript_id, seq_region_start, seq_region_end, seq_region_strand  "
 	qry += "from gene where seq_region_id=%d "%seq_region_id[chrom]
 	qry += "and seq_region_start-100<=%d and %d<=seq_region_end+100" % (variant_pos, variant_pos)
@@ -259,51 +383,109 @@ def annotate(cursor, seq_region_id, line):
 		gene_annotation_fields.append("intergenic")
 	else:
 		for [gene_id, stable_id, canonical_transcript_id, seq_region_start, seq_region_end, strand] in ret:
+			# if strand>0: continue
 			if stable_id not in stable2approved_symbol: # see if we have it stored by any chance
 				find_approved(cursor, stable_id)
-			# mark RNA's  and immune (hypervariable) genes separately - see notes above
 			symbol =  stable2approved_symbol[stable_id]
 			name = stable2approved_name[stable_id]
+			if is_readthrough(name): continue
+			# print("\n=================\n", name, symbol, chrom, strand, variant_pos, gt)
+			# mark RNA's  and immune (hypervariable) genes separately - see notes above
 			if is_rna(symbol, name):
-				gene_annotation_fields.append("%s:r" % (stable2approved_symbol[stable_id]))
-				continue
-			if is_immune(symbol, name):
-				gene_annotation_fields.append("%s:t" % (stable2approved_symbol[stable_id]))
-				continue
-			variant_pos_in_gene = variant_pos - seq_region_start
-			location_code = location_within_protein_coding_gene(cursor, gene_id, variant_pos_in_gene)
-			annotation = "%s:%s:%s" % (stable2approved_symbol[stable_id], stable_id,  location_code)
-			if location_code == "e": # we are within the exon
-				protein_annotation = []
-				for allele in gt.split("|"):
-					[nt_from, nt_to] = allele.split(":")
-					if nt_from==nt_to:
-						protein_annotation.append("none")
-					else:
-						if len(nt_from)==1 and len(nt_to)==1:
-							aa_change = protein_level_change(cursor,  gene_id, canonical_transcript_id,
-															variant_pos_in_gene, nt_from, nt_to, strand)
-							if not aa_change: aa_change="unk"
-							protein_annotation.append(aa_change)
-						elif abs(len(nt_from)-len(nt_to))%3==0:
-							protein_annotation.append("infrm")
-						else:
-							protein_annotation.append("indel")
-				if len(protein_annotation) > 0:
-					annotation += ":" + "|".join(protein_annotation)
-			gene_annotation_fields.append("%s:%s:%s" % (stable2approved_symbol[stable_id], stable_id,  location_code))
+				gene_annotation_fields.append("%s:r" % symbol)
+
+			elif is_immune(symbol, name):
+				gene_annotation_fields.append("%s:t" % symbol)
+
+			else: # this should be a regular protein coding gene
+				variant_pos_in_gene = variant_pos - seq_region_start
+				location_code = location_within_protein_coding_gene(cursor, gene_id, variant_pos_in_gene, verbose=False)
+				annotation = "%s:%s:%s" % (symbol, "+" if strand>0 else "-",  location_code)
+				if location_code == "e": # we are within the exon
+					annotation += exonic_variant_annotation(cursor, gene_id, canonical_transcript_id, variant_pos_in_gene, gt, strand)
+				gene_annotation_fields.append(annotation)
 
 		not_anon = [annot for annot in gene_annotation_fields if "anon:" not in annot]
 		if len(not_anon)>0: gene_annotation_fields = not_anon
+		not_rna = [annot for annot in gene_annotation_fields if ":r" not in annot]
+		if len(not_rna)>0: gene_annotation_fields = not_rna
 
-	print(" ==   %s  %d  %s   %s" % (chrom, variant_pos, gt, ";".join(gene_annotation_fields)))
-	if ":e" in ";".join(gene_annotation_fields): exit()
+	# annotation_string = ";".join(gene_annotation_fields)
+	# for the purposes of 2020 class, we pretend there are no cases where twp genes are affected
+	# annotation_string = ";".join(gene_annotation_fields)
+	annotation_string = gene_annotation_fields[0]
+	return [str(x) for x in [chrom, variant_pos, gt, single_digit_freq, annotation_string, gt_mom, gt_dad]]
 
 
 ############################
-def main():
+# flags
+HOMOZYGOTE   =  1
+COMMON       =  2
+EXONIC       =  4
+SILENT       =  8
+DE_NOVO      = 16
+PARENT_HOMOZYGOTE = 32
 
-	fnm = "test1.hg38.vcf"
+import re
+mut_annot_pattern = re.compile('.*e\:([A-Z])(\d+)([A-Z]).*')
+############################
+def add_flags(annotation_fields):
+	[chrom, variant_pos, gt, single_digit_freq, annotation_string, gt_mom, gt_dad] = annotation_fields
+	flags = 0
+
+	# homozygote?
+	alleles = gt.split("|")
+	if len(set(alleles)) == 1:
+		flags += HOMOZYGOTE
+
+	# common?
+	rare_orders_of_mag = [int(x) for x in single_digit_freq.split("|") if int(x)>2]
+	if len(rare_orders_of_mag)==0:
+		flags += COMMON
+
+	# exonic? we will include splice positions here
+	if ":e" in annotation_string or ":s" in annotation_string:
+		flags += EXONIC
+
+	# silent?
+	if ":e" in annotation_string:
+		# flag as silent if each time e appears, the
+		# substitution on the protein level is silent
+		outcomes = []
+		for ann in  re.split('[|;]', annotation_string):
+			match = re.match(mut_annot_pattern, ann)
+			if match:
+				outcomes.append(match.group(1)==match.group(3))
+		if outcomes and len([x for x in outcomes if not x])==0:
+			flags += SILENT
+
+	# exists in parent
+	child_alleles = set(gt.split("|"))
+	parent_alleles = set(gt_mom.split("|")) | set(gt_dad.split("|"))
+	child_alleles.difference(parent_alleles)
+	if len(child_alleles.difference(parent_alleles))>0:
+		flags+=DE_NOVO
+
+	for allele in child_alleles:
+		[ref,var] = allele.split(":")
+		if ref==var: continue
+		if gt_mom=="{}|{}".format(allele, allele):
+			flags += PARENT_HOMOZYGOTE
+			break
+		if gt_dad=="{}|{}".format(allele, allele):
+			flags += PARENT_HOMOZYGOTE
+			break
+
+
+	return "\t".join(annotation_fields+[str(flags)])
+
+
+############################
+def outer_loop(base_name):
+
+	fnm = "{}.hg38.vcf".format(base_name)
+	print("annotating", fnm)
+	time0 = time()
 
 	expected_assembly = "hg38"
 	if not expected_assembly in fnm:
@@ -313,10 +495,14 @@ def main():
 	vcfdir = "/storage/sequencing/openhumans/fakexomes/progeny"
 	fpath = "{}/{}".format(vcfdir, fnm)
 	mysql_conf_file = "/home/ivana/.tcga_conf"
-	for dep in [vcfdir, fpath, mysql_conf_file]:
+	# get omim, while we are at that
+	omimpath = "/storage/databases/omim/mim2hgnc.tsv"
+	for dep in [vcfdir, fpath, mysql_conf_file, omimpath]:
 		if not os.path.exists(dep):
 			print(dep, "not found")
 			exit()
+
+	hgnc2omim = read_omim(omimpath)
 
 	db = connect_to_mysql(mysql_conf_file)
 	cursor = db.cursor()
@@ -325,23 +511,41 @@ def main():
 	# coord_system with id 4 is chromosome for GRCh38
 	seq_region_id = get_seq_region_ids(cursor)
 
-	# cursor, gene_id, variant_pos_in_gene
-	# genome2cds_pos(cursor, 397958, 3411794-3069168)
-	# cursor,  gene_id, canonical_transcript_id, variant_position_in_gene
-	# protein_level_change(cursor, 397958, 1397175, 3411794-3069168)
-	# exit()
-
 
 	inf = open(fpath,"r")
+	outf = open("{}.annotated.vcf".format(base_name),"w")
+	line_ct = 0
 	for line in inf:
-		line_annotated = annotate(cursor, seq_region_id, line)
-		# print(line_annotated)
+		if line[0]=='#': continue
+		annotation_fields = annotate(cursor, seq_region_id, line)
+		line_annotated = add_flags(annotation_fields)
+		#print(line_annotated, "       {0:b}".format(int(line_annotated.split("\t")[-1])))
+		outf.write(line_annotated + "\n")
+		line_ct += 1
 	inf.close()
+	outf.close()
+
+	# output affected genes (with id translation
+	outf = open("{}.affected_genes.tsv".format(base_name),"w")
+	for stable, approved in stable2approved_symbol.items():
+		if approved=="anon": continue
+		uniprot = stable2uniprot[stable]
+		omim = hgnc2omim.get(approved, "x")
+		outf.write("\t".join([approved, uniprot, omim]) + "\n")
+	outf.close()
 
 	cursor.close()
 	db.close()
+
+	print(fnm, "done, %2.1f min" % ((time()-time0)/60) )
+	
 	return
 
+############################
+def main():
+	for i in range(15):
+		outer_loop("child%d"%i)
+	return
 
 #########################################
 if __name__ == '__main__':
