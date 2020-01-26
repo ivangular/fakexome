@@ -18,6 +18,8 @@
 # Contact: ivana.mihalek@gmail.com, ivana.mihalek@uniri.hr
 
 from fe_utils.CrossMap import *
+from fe_utils.mysql import *
+
 #########################################
 def translate_positions(positions, chromosome, from_assembly, to_assembly, rootname=None):
 
@@ -79,3 +81,78 @@ def translate_positions(positions, chromosome, from_assembly, to_assembly, rootn
 
 	return translation
 
+
+def read_omim(omim_path):
+	if not os.path.exists(omim_path):
+		print(omim_path, "not found")
+		return {}
+	hgnc2omim = {}
+	with open(omim_path, "r") as inf:
+		for line in inf:
+			fields = line.strip().split()
+			if len(fields)<2: continue
+			[omim, hgnc] = fields[:2]
+			hgnc2omim[hgnc] = omim
+	return hgnc2omim
+
+###############################
+'''
+mysql> select count(hgnc_approved) from uniprot_hgnc;
++----------------------+
+| count(hgnc_approved) |
++----------------------+
+|                20368 |
++----------------------+
+mysql> select hgnc_approved, count(uniprot_id) as ct from uniprot_hgnc group by hgnc_approved having ct>1
+....
+47 rows in set (0.04 sec)
+mysql> select count(hgnc_approved) from uniprot_hgnc where uniprot_id is null;
++----------------------+
+| count(hgnc_approved) |
++----------------------+
+|                    0 |
++----------------------+
+1 row in set (0.00 sec)
+
+'''
+def hgnc2uniprot(cursor, approved):
+	# identifier_maps.uniprot_hgnc has the current uniprot as the key
+	# (there are many old uniprot id's that map to the new one in the use around)
+	qry  = "select uniprot_id from identifier_maps.uniprot_hgnc "
+	qry += "where hgnc_approved='%s'" % approved
+	ret = error_intolerant_search(cursor, qry)
+	# we are ignoring the fact there might be 2 uniprots
+	# the estimate (by couting the intries in the table) is it happens in 0.2% of cases (see above)
+	return ret[0][0] if ret else "x"
+
+
+###############################
+'''
+388 kegg_id s do not have uniprot id
+mysql> select uniprot,  count(kegg_id) as ct from kegg_human group by uniprot having ct>1;
++---------+-----+
+| uniprot | ct  |
++---------+-----+
+| NULL    | 388 |
++---------+-----+
+1 row in set (0.03 sec)
+no kegg ids have two uniprots
+mysql> select kegg_id, count(uniprot) as ct from kegg_human group by  kegg_id having ct>1;
+Empty set (0.01 sec)
+
+'''
+def uniprot2kegg(cursor, uniprot):
+	qry  = "select kegg_id, kegg_pathways from identifier_maps.kegg_human "
+	qry += "where uniprot='%s'" % uniprot
+	ret = error_intolerant_search(cursor, qry)
+	# we are counting on the fact there might be 2 uniprots (see above)
+	return ret[0] if ret else ["x","x"]
+
+
+###############################
+def get_kegg_pthwy_name(cursor, kegg_pathway_id):
+	# kegg pathway_id uses padding, as in 00030,  which i chose not to strip:
+	qry = "select name from identifier_maps.kegg_pathway_name "
+	qry += "where kegg_pathway_id='%s'" % kegg_pathway_id
+	ret = error_intolerant_search(cursor, qry)
+	return ret[0][0] if ret else "x"

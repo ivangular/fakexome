@@ -21,6 +21,7 @@ import os
 
 
 from fe_utils.ensembl import *
+from fe_utils.utils import *
 from Bio.Seq      import Seq
 from Bio.Alphabet import generic_dna
 
@@ -35,21 +36,6 @@ from Bio.Alphabet import generic_dna
 stable2approved_symbol = {}
 stable2approved_name = {}
 stable2uniprot = {}
-
-
-def read_omim(omim_path):
-	if not os.path.exists(omim_path):
-		print(omim_path, "not found")
-		return {}
-	hgnc2omim = {}
-	with open(omim_path, "r") as inf:
-		for line in inf:
-			fields = line.strip().split()
-			if len(fields)<2: continue
-			[omim, hgnc] = fields[:2]
-			hgnc2omim[hgnc] = omim
-	return hgnc2omim
-
 
 
 ####################################
