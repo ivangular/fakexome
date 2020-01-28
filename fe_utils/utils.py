@@ -156,3 +156,59 @@ def get_kegg_pthwy_name(cursor, kegg_pathway_id):
 	qry += "where kegg_pathway_id='%s'" % kegg_pathway_id
 	ret = error_intolerant_search(cursor, qry)
 	return ret[0][0] if ret else "x"
+
+
+###############################
+# flags
+HOMOZYGOTE   =  1
+COMMON       =  2
+EXONIC       =  4
+SILENT       =  8
+DE_NOVO      = 16
+PARENT_HOMOZYGOTE = 32
+
+###############################
+def get_variants_per_chrom(fpath):
+	vars_per_chrom = {}
+	with open(fpath, "r") as inf:
+		for line in inf:
+			if line[0] == "#": continue
+			fields = line.strip().split()
+			if len(fields) <3: continue
+			chrom = fields[0]
+			pos = int(fields[1])
+			if not chrom in vars_per_chrom: vars_per_chrom[chrom] = {}
+			vars_per_chrom[chrom][pos] = fields[2:]
+	return vars_per_chrom
+
+
+def variants_output(fnm, hdr, vars_per_chrom):
+	genes_affected = set([])
+	outf = open(fnm, "w")
+	outf.write(hdr)
+	# output the variants sorted
+	for chrom, vars in vars_per_chrom.items():
+		for pos in sorted(vars.keys()):
+			outf.write("\t".join([str(x) for x in [chrom, pos] + vars[pos]]) + "\n")
+			if ":" in vars[pos][2]:
+				gene_symbol = vars[pos][2].split(":")[0]
+				genes_affected.add(gene_symbol)
+	outf.close()
+	return genes_affected
+
+
+def output_affected_genes(cursor, fnm, genes_affected, hgnc2omim):
+	# TODO - hgnc2omim to indentifier_maps mysql
+	outf = open(fnm,"w")
+	for approved in genes_affected:
+		if approved=="anon": continue
+		uniprot = hgnc2uniprot(cursor, approved)
+		[kegg_geneid, kegg_pathways] = uniprot2kegg(cursor, uniprot)
+		if not kegg_pathways: kegg_pathways="x"
+		omim = hgnc2omim.get(approved, "x")
+		outf.write("\t".join([approved, uniprot, omim, str(kegg_geneid), kegg_pathways]) + "\n")
+		# the "x" pathwys might be disease pathways which I chose not to use
+		# if kegg_pathways and kegg_pathways != "x":
+		# 	kegg_pathway_ids.update(set(kegg_pathways.split(";")))
+	outf.close()
+

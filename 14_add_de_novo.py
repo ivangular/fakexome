@@ -22,6 +22,7 @@ from random import choice, sample
 
 from fe_utils.utils import *
 
+
 def get_info(fpath):
 	with open(fpath, "r") as inf:
 		line = inf.readline().strip().replace(":", "")
@@ -35,28 +36,7 @@ def get_info(fpath):
 	return info
 
 
-def get_variants_per_chrom(fpath):
-	vars_per_chrom = {}
-	with open(fpath, "r") as inf:
-		for line in inf:
-			fields = line.strip().split()
-			chrom = fields[0]
-			pos = int(fields[1])
-			if not chrom in vars_per_chrom: vars_per_chrom[chrom] = {}
-			vars_per_chrom[chrom][pos] = fields[2:]
-	return vars_per_chrom
-
-# flags
-HOMOZYGOTE   =  1
-COMMON       =  2
-EXONIC       =  4
-SILENT       =  8
-DE_NOVO      = 16
-PARENT_HOMOZYGOTE = 32
-
-genes_affected = set([])
-
-def add_de_novo(vars_per_chrom, vars_per_chrom_donor):
+def add_de_novo(vars_per_chrom, vars_per_chrom_donor, gender):
 	for chrom, vars in vars_per_chrom_donor.items():
 		sample_size = int(len(vars_per_chrom[chrom])/10)
 		simulated_de_novo = {}
@@ -80,20 +60,33 @@ def add_de_novo(vars_per_chrom, vars_per_chrom_donor):
 			# TODO make parents' genotypes less trivial
 			trivial_gt = "%s:%s|%s:%s"%(ref_nt, ref_nt, ref_nt, ref_nt)
 			haplo_gt = "%s:%s"%(ref_nt, ref_nt)
+			# make sure we are not homozygous in de novo variant
+			child_gt = set(simulated_de_novo[pos][0].split("|"))
+			if len(child_gt)==1:
+				# if we see only the reference, this is not a variant
+				# we should not have ended here
+				if list(child_gt)[0] == trivial_gt: continue
+				if chrom=="Y":
+					pass
+				if chrom == "X" and gender == "male":
+					pass
+				simulated_de_novo[pos][0] = "|".join([haplo_gt, list(child_gt)[0]])
+
 			#mother genotype
 			simulated_de_novo[pos][-3] = trivial_gt if chrom != "Y" else "-"
 
 			#father genotype
 			simulated_de_novo[pos][-2] = trivial_gt if chrom != "X" else haplo_gt
 
-			# TODO fix the annotation flags
-
-			if ":" in simulated_de_novo[pos][-4]:
-				gene_symbol = simulated_de_novo[pos][-4].split(":")[0]
-				genes_affected.add(gene_symbol)
+			# fix the annotation flags
+			flags = int(simulated_de_novo[pos][-1])
+			flags |= DE_NOVO
+			flags &= ~(PARENT_HOMOZYGOTE|HOMOZYGOTE)
+			simulated_de_novo[pos][-1] = flags
 
 		#here, we are updating the original vcf
 		vars_per_chrom[chrom].update(simulated_de_novo)
+
 
 ############################
 def get_original_header(originals, base_name, child_no):
@@ -103,44 +96,12 @@ def get_original_header(originals, base_name, child_no):
 		exit()
 	with open(fpath, "r") as inf:
 		hdr = [next(inf) for x in range(2)]
-	return "\n".join(hdr)
+	return "".join(hdr) # we have the newlines in there, we did not strip them
 
 
-############################
-def outer_loop(base_name, child_no, number_of_children, male_children, female_children, cursor, hgnc2omim, originals):
-
-	print("adding de novo for", child_no)
-
-	annotated_fnm = "{}{}.annotated.vcf".format(base_name, child_no)
-	if annotated_fnm in female_children:
-		random_donor = choice(list(female_children - {annotated_fnm}))
-	else:
-		random_donor = choice(list(male_children - {annotated_fnm}))
-
-	vars_per_chrom = get_variants_per_chrom(annotated_fnm)
-	vars_per_chrom_donor = get_variants_per_chrom(random_donor)
-
-	# for each chromosome, pick 1/10 of the non-related person's variants
-	# make sure they are not in parents genotype and not too common and add them to variants
-	# (these will play the role of 'de novo' variants
-	add_de_novo(vars_per_chrom, vars_per_chrom_donor)
-
-	hdr  = "# de_novo_donor: {} \n".format(random_donor)
-	hdr += get_original_header(originals, base_name, child_no)
-	w_de_novo_fnm = "{}{}.w_de_novo.vcf".format(base_name, child_no)
-	outf = open(w_de_novo_fnm, "w")
-	outf.write(hdr)
-	# output the variants sorted
-	for chrom, vars in vars_per_chrom.items():
-		for pos in sorted(vars.keys()):
-			outf.write("\t".join([str(x) for x in [chrom, pos] + vars[pos]]) + "\n")
-	outf.close()
-	# redo the file for identifiers
-	# add kegg pathway titles
-
-	# output affected genes (with id translation)
-	#kegg_pathway_ids = set()
-	outf = open("{}{}.affected_genes.tsv".format(base_name, child_no),"w")
+def output_affected_genes(cursor, fnm, genes_affected, hgnc2omim):
+	# TODO - hgnc2omim to indentifier_maps mysql
+	outf = open(fnm,"w")
 	for approved in genes_affected:
 		if approved=="anon": continue
 		uniprot = hgnc2uniprot(cursor, approved)
@@ -153,7 +114,42 @@ def outer_loop(base_name, child_no, number_of_children, male_children, female_ch
 		# 	kegg_pathway_ids.update(set(kegg_pathways.split(";")))
 	outf.close()
 
-	# this is not worth the trouble
+
+
+############################
+def outer_loop(base_name, child_no, number_of_children, male_children, female_children, cursor, hgnc2omim, originals):
+
+	print("adding de novo for", child_no)
+
+	annotated_fnm = "{}{}.annotated.vcf".format(base_name, child_no)
+	if annotated_fnm in female_children:
+		random_donor = choice(list(female_children - {annotated_fnm}))
+		gender = "female"
+	else:
+		random_donor = choice(list(male_children - {annotated_fnm}))
+		gender =  "male"
+
+	vars_per_chrom = get_variants_per_chrom(annotated_fnm)
+	vars_per_chrom_donor = get_variants_per_chrom(random_donor)
+
+	# for each chromosome, pick 1/10 of the non-related person's variants
+	# make sure they are not in parents genotype and not too common and add them to variants
+	# (these will play the role of 'de novo' variants
+	add_de_novo(vars_per_chrom, vars_per_chrom_donor, gender)
+
+	hdr  = "# de_novo_donor: {} \n".format(random_donor)
+	hdr += get_original_header(originals, base_name, child_no)
+	w_de_novo_fnm = "{}{}.w_de_novo.vcf".format(base_name, child_no)
+	genes_affected  = variants_output(w_de_novo_fnm, hdr, vars_per_chrom)
+
+	# redo the file for identifiers
+	# add kegg pathway titles
+	# output affected genes (with id translation)
+
+	fnm = 	"{}{}.affected_genes.tsv".format(base_name, child_no)
+	output_affected_genes(cursor, fnm, genes_affected, hgnc2omim)
+
+	# outputting pathway names is not worth the trouble
 	# typically this results in an 8K file - all pathways are 13K
 	# outf = open("{}{}.kegg_pthwys.tsv".format(base_name, child_no),"w")
 	# for kegg_pthwy_id in kegg_pathway_ids:
@@ -180,7 +176,6 @@ def main():
 			print(dep, "not found")
 			exit()
 	hgnc2omim = read_omim(omimpath)
-
 	db = connect_to_mysql(mysql_conf_file)
 	cursor = db.cursor()
 
@@ -191,10 +186,10 @@ def main():
 			exit()
 
 	# lets output  kegg pathway names once and for all
-	with open("kegg_pthwys.tsv","w") as outf:
-		for [kegg_pthwy_id, name] in hard_landing_search(cursor, "select * from identifier_maps.kegg_pathway_name"):
-			outf.write("\t".join([kegg_pthwy_id, name]) + "\n")
-	exit()
+	# with open("kegg_pthwys.tsv","w") as outf:
+	# 	for [kegg_pthwy_id, name] in hard_landing_search(cursor, "select * from identifier_maps.kegg_pathway_name"):
+	# 		outf.write("\t".join([kegg_pthwy_id, name]) + "\n")
+	# exit()
 
 	male_children = set()
 	female_children = set()

@@ -36,6 +36,7 @@ wget-log*
 *.tsv
 *.vcf
 *.csv
+*.cif
 *~
 *.fa
 *.afa
